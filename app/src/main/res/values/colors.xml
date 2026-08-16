@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Modern Color Palette (Neutral Zinc / Slate) -->
+    <color name="bg_primary">#0B0F14</color>
+    <color name="bg_surface">#141A22</color>
+    <color name="bg_card">#1B232E</color>
+    <color name="bg_card_highlight">#232D3B</color>
+
+    <color name="text_primary">#F1F5F9</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+
+    <!-- State Accent Colors -->
+    <color name="status_disarmed">#64748B</color>
+    <color name="status_armed">#10B981</color>
+    <color name="status_warning">#F59E0B</color>
+    <color name="status_emergency">#EF4444</color>
+    <color name="status_degraded">#F97316</color>
+
+    <!-- Button & Interactive -->
+    <color name="btn_arm_bg">#10B981</color>
+    <color name="btn_arm_text">#FFFFFF</color>
+    <color name="btn_disarm_bg">#334155</color>
+    <color name="btn_disarm_text">#F1F5F9</color>
+
+    <!-- Visualizer / Meter -->
+    <color name="meter_bg">#0F172A</color>
+    <color name="meter_fill">#38BDF8</color>
+    <color name="threat_bar_fill">#F43F5E</color>
+
+    <!-- Standard Framework Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

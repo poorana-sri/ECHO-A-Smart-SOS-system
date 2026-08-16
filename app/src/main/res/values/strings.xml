@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ECHO</string>
+    <string name="app_tagline">Privacy-First Acoustic Emergency Detection Prototype</string>
+    <string name="prototype_notice">C.I.T. Hackathon Prototype — Developer 1 Audio &amp; AI Runtime</string>
+
+    <!-- Privacy Banner -->
+    <string name="privacy_statement">Echo does not permanently store or continuously upload your audio during normal monitoring. 3-second audio buffer operates entirely in volatile RAM.</string>
+
+    <!-- State Labels -->
+    <string name="status_label">System Status:</string>
+    <string name="status_disarmed">DISARMED</string>
+    <string name="status_armed">ARMED &amp; MONITORING</string>
+    <string name="status_degraded">DEGRADED / RESTRICTED</string>
+    <string name="status_sos">ACTIVE SOS</string>
+
+    <!-- Actions -->
+    <string name="btn_arm">Arm Echo</string>
+    <string name="btn_disarm">Disarm Echo</string>
+    <string name="btn_grant_permissions">Grant Microphone &amp; Notifications</string>
+    <string name="btn_test_wake_phrase">[DEMO / MOCK] Simulate \"Hey Echo\"</string>
+    <string name="btn_test_cancel_phrase">[DEMO / MOCK] Simulate \"Hey Echo, cancel SOS\"</string>
+    <string name="btn_test_accident">[DEMO / MOCK] Simulate ACCIDENT Handoff</string>
+
+    <!-- Notification Strings -->
+    <string name="notification_channel_name">Echo Acoustic Monitoring</string>
+    <string name="notification_channel_desc">Active foreground service protecting user via local acoustic emergency detection</string>
+    <string name="notification_title_armed">ECHO Protection Active</string>
+    <string name="notification_text_armed">Local acoustic monitoring active in volatile RAM. Wake phrase: \"Hey Echo\"</string>
+    <string name="notification_title_degraded">ECHO Protection Degraded</string>
+    <string name="notification_text_degraded">Microphone capture unavailable. Tap to review permissions.</string>
+
+    <!-- Telemetry Cards -->
+    <string name="title_acoustic_telemetry">Live Acoustic Telemetry</string>
+    <string name="label_rms_level">RAM Buffer Audio Level (RMS):</string>
+    <string name="label_current_class">Echo Sequence Class:</string>
+    <string name="label_threat_score">Universal Threat Score (Dev 3 Mock):</string>
+    <string name="label_ai_status">AI Runtime Status:</string>
+
+    <!-- Class Names -->
+    <string name="class_normal">NORMAL</string>
+    <string name="class_accident">ACCIDENT</string>
+    <string name="class_distress">DISTRESS</string>
+    <string name="class_violent_incident">VIOLENT_INCIDENT</string>
+
+    <!-- Logs -->
+    <string name="title_event_log">Handoff &amp; Inference Event Stream</string>
+</resources>
