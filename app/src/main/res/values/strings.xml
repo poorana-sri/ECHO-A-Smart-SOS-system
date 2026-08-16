@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">ECHO</string>
     <string name="app_tagline">Privacy-First Acoustic Emergency Detection Prototype</string>
-    <string name="prototype_notice">C.I.T. Hackathon Prototype — Developer 1 Audio &amp; AI Runtime</string>
+    <string name="prototype_notice">C.I.T. Hackathon Prototype — Threat Score, Sensor Fusion &amp; SOS Orchestrator</string>
 
     <!-- Privacy Banner -->
     <string name="privacy_statement">Echo does not permanently store or continuously upload your audio during normal monitoring. 3-second audio buffer operates entirely in volatile RAM.</string>
@@ -11,16 +11,25 @@
     <string name="status_label">System Status:</string>
     <string name="status_disarmed">DISARMED</string>
     <string name="status_armed">ARMED &amp; MONITORING</string>
+    <string name="status_countdown">SOS WARNING: COUNTDOWN ACTIVE</string>
     <string name="status_degraded">DEGRADED / RESTRICTED</string>
-    <string name="status_sos">ACTIVE SOS</string>
+    <string name="status_sos">SOS ACTIVE</string>
+    <string name="status_resolved">SOS RESOLVED</string>
 
     <!-- Actions -->
     <string name="btn_arm">Arm Echo</string>
     <string name="btn_disarm">Disarm Echo</string>
-    <string name="btn_grant_permissions">Grant Microphone &amp; Notifications</string>
-    <string name="btn_test_wake_phrase">[DEMO / MOCK] Simulate \"Hey Echo\"</string>
-    <string name="btn_test_cancel_phrase">[DEMO / MOCK] Simulate \"Hey Echo, cancel SOS\"</string>
-    <string name="btn_test_accident">[DEMO / MOCK] Simulate ACCIDENT Handoff</string>
+    <string name="btn_cancel_sos">CANCEL SOS</string>
+    <string name="btn_resolve_sos">RESOLVE SOS</string>
+    <string name="btn_manual_sos">TRIGGER MANUAL SOS</string>
+    <string name="btn_grant_permissions">Grant Permissions</string>
+    <string name="btn_test_wake_phrase">[DEMO] Simulate \"Hey Echo\"</string>
+    <string name="btn_test_cancel_phrase">[DEMO] Voice Cancel (\"Hey Echo, cancel SOS\")</string>
+    <string name="btn_test_accident">[DEMO] Scenario 2: Accident + Impact</string>
+    <string name="btn_test_scream">[DEMO] Scenario 3: Scream Alone (No Motion)</string>
+    <string name="btn_test_distress_motion">[DEMO] Scenario 4: Distress + Erratic Motion</string>
+    <string name="btn_test_harmless">[DEMO] Scenario 1: Loud Harmless (Fireworks)</string>
+    <string name="btn_toggle_network">[DEMO] Toggle Network Offline/Online</string>
 
     <!-- Notification Strings -->
     <string name="notification_channel_name">Echo Acoustic Monitoring</string>
@@ -31,11 +40,11 @@
     <string name="notification_text_degraded">Microphone capture unavailable. Tap to review permissions.</string>
 
     <!-- Telemetry Cards -->
-    <string name="title_acoustic_telemetry">Live Acoustic Telemetry</string>
+    <string name="title_acoustic_telemetry">Live Acoustic &amp; Sensor Telemetry</string>
     <string name="label_rms_level">RAM Buffer Audio Level (RMS):</string>
     <string name="label_current_class">Echo Sequence Class:</string>
-    <string name="label_threat_score">Universal Threat Score (Dev 3 Mock):</string>
-    <string name="label_ai_status">AI Runtime Status:</string>
+    <string name="label_threat_score">Threat Score (Fused Acoustic + Motion):</string>
+    <string name="label_ai_status">AI &amp; Sensor Status:</string>
 
     <!-- Class Names -->
     <string name="class_normal">NORMAL</string>

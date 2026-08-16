@@ -93,3 +93,36 @@ data class SosEvent(
     val timestamp: Long,
     val status: String // MONITORING, COUNTDOWN, CANCELLED, ACTIVE_SOS, RESOLVED, DEGRADED
 )
+
+/**
+ * Standard SOS State Machine states.
+ */
+enum class SosState {
+    MONITORING,
+    COUNTDOWN,
+    CANCELLED,
+    ACTIVE_SOS,
+    RESOLVED,
+    DEGRADED
+}
+
+/**
+ * Location data source status.
+ */
+enum class LocationSource {
+    LIVE,
+    LAST_KNOWN,
+    UNAVAILABLE
+}
+
+/**
+ * Real-time location update contract for Developer 3 & Developer 4.
+ */
+data class LocationUpdate(
+    val incidentId: String,
+    val latitude: Double,
+    val longitude: Double,
+    val timestamp: Long,
+    val accuracy: Float,
+    val source: LocationSource = LocationSource.LIVE
+)

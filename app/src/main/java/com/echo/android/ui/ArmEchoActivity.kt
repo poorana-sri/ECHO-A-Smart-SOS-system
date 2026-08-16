@@ -18,13 +18,17 @@ import com.echo.android.R
 import com.echo.android.ai.AudioEvent
 import com.echo.android.ai.ClassifierResult
 import com.echo.android.ai.EmergencyClass
-import com.echo.android.ai.MockThreatEngine
 import com.echo.android.ai.ModelStatus
+import com.echo.android.ai.SensorEvidence
+import com.echo.android.ai.SosState
 import com.echo.android.ai.ThreatEngineInterface
 import com.echo.android.ai.ThreatUpdate
 import com.echo.android.audio.ForegroundAudioService
+import com.echo.android.contacts.EmergencyContact
 import com.echo.android.databinding.ActivityArmEchoBinding
 import com.echo.android.permissions.PermissionsGateway
+import com.echo.android.sos.CountdownController
+import com.echo.android.sos.EchoSosOrchestrator
 import com.echo.android.wake.DefaultVoiceCommandDetector
 import com.echo.android.wake.DefaultWakeWordDetector
 import com.echo.android.wake.VoiceCommandListener
@@ -34,24 +38,16 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Main Activity for ECHO Prototype: Developer 1 Foundation & AI Runtime.
- *
- * Provides:
- * - Explicit user control to Arm/Disarm Echo.
- * - Start/Stop of microphone Foreground Service.
- * - Live visualization of volatile RAM buffer RMS energy.
- * - Live AI classification probabilities and Mock Threat Score.
- * - Interactive simulation controls for "Hey Echo", voice cancel, and emergency handoffs.
- *
- * NOTE: Hackathon prototype implementation.
+ * Main Activity for ECHO Prototype: Integrating Developer 1 Foundation, Developer 2 ML,
+ * and Developer 3 Threat Engine & SOS Orchestrator.
  */
 class ArmEchoActivity : AppCompatActivity(),
     ForegroundAudioService.ServiceStateListener,
-    ThreatEngineInterface.ThreatUpdateListener {
+    ThreatEngineInterface.ThreatUpdateListener,
+    CountdownController.CountdownListener {
 
     companion object {
         private const val TAG = "ArmEchoActivity"
-        private const val MAX_LOG_LINES = 100
     }
 
     private lateinit var binding: ActivityArmEchoBinding
@@ -61,15 +57,15 @@ class ArmEchoActivity : AppCompatActivity(),
     private var isServiceBound = false
     private var isArmed = false
 
-    // Local wake word detector and voice command listener for prototype controls
+    lateinit var orchestrator: EchoSosOrchestrator
+        private set
+
     private lateinit var wakeWordDetector: WakeWordDetector
     private lateinit var voiceCommandListener: VoiceCommandListener
-    private val threatEngine: ThreatEngineInterface = MockThreatEngine.instance
 
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
     private val logBuffer = StringBuilder()
 
-    // Permission request launcher
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -78,9 +74,8 @@ class ArmEchoActivity : AppCompatActivity(),
             appendLog("[Permission] Microphone permission granted.")
             updatePermissionUi(true)
         } else {
-            appendLog("[Warning] Microphone permission denied. Acoustic detection degraded.")
+            appendLog("[Warning] Microphone permission denied.")
             updatePermissionUi(false)
-            Toast.makeText(this, "Microphone permission is required for acoustic monitoring.", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -92,7 +87,8 @@ class ArmEchoActivity : AppCompatActivity(),
             isServiceBound = true
             isArmed = true
             updateArmUi(true)
-            appendLog("[Service] Connected to ForegroundAudioService (mic monitoring active).")
+            orchestrator.arm()
+            appendLog("[Service] ForegroundAudioService connected and armed.")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -100,6 +96,7 @@ class ArmEchoActivity : AppCompatActivity(),
             audioService = null
             isServiceBound = false
             isArmed = false
+            orchestrator.disarm()
             updateArmUi(false)
             appendLog("[Service] Disconnected from ForegroundAudioService.")
         }
@@ -111,14 +108,24 @@ class ArmEchoActivity : AppCompatActivity(),
         setContentView(binding.root)
 
         permissionsGateway = PermissionsGateway(this)
+        orchestrator = EchoSosOrchestrator(this)
         wakeWordDetector = DefaultWakeWordDetector()
         voiceCommandListener = DefaultVoiceCommandDetector()
 
+        // Initialize default demo contacts if none present (guarantees 2-5 contacts)
+        if (orchestrator.contactManager.getContacts().isEmpty()) {
+            orchestrator.contactManager.saveContacts(
+                listOf(
+                    EmergencyContact("c1", "Mom", "+15551234567"),
+                    EmergencyContact("c2", "Primary Contact", "+15559876543")
+                )
+            )
+        }
+
         setupViews()
         setupListeners()
-        threatEngine.addThreatListener(this)
+        setupStateListeners()
 
-        // Check initial permissions
         val hasMic = permissionsGateway.hasMicrophonePermission()
         updatePermissionUi(hasMic)
         if (!hasMic) {
@@ -129,56 +136,127 @@ class ArmEchoActivity : AppCompatActivity(),
     private fun setupViews() {
         binding.tvLogConsole.movementMethod = ScrollingMovementMethod()
         updateArmUi(false)
+        updateContactsUi()
+    }
+
+    private fun setupStateListeners() {
+        orchestrator.threatEngine.addThreatListener(this)
+        orchestrator.countdownController.setListener(this)
+
+        orchestrator.stateMachine.addStateListener { previous, current ->
+            runOnUiThread {
+                updateSosStateUi(current)
+                appendLog("[State] Transition: $previous -> $current")
+            }
+        }
     }
 
     private fun setupListeners() {
-        // Arm / Disarm toggle button
         binding.btnToggleArm.setOnClickListener {
-            if (isArmed) {
-                disarmEcho()
-            } else {
-                armEcho()
-            }
+            if (isArmed) disarmEcho() else armEcho()
         }
 
-        // Permission retry button
         binding.btnPermissions.setOnClickListener {
             permissionsGateway.requestEssentialPermissions(permissionLauncher)
         }
 
-        // Simulate "Hey Echo" wake word
-        binding.btnSimulateWakeWord.setOnClickListener {
-            appendLog("[DEMO / MOCK] User triggered \"Hey Echo\" voice wake simulation.")
-            if (!isArmed) {
-                armEcho()
-            } else {
-                Toast.makeText(this, "Echo is already armed and monitoring.", Toast.LENGTH_SHORT).show()
-            }
+        binding.btnCancelSos.setOnClickListener {
+            appendLog("[User] Cancel SOS button pressed.")
+            orchestrator.cancelCountdown("Button cancel")
         }
 
-        // Simulate "Hey Echo, cancel SOS" voice cancellation
-        binding.btnSimulateVoiceCancel.setOnClickListener {
-            appendLog("[DEMO / MOCK] Voice cancel triggered: \"Hey Echo, cancel SOS\".")
-            voiceCommandListener.simulateCancelCommand()
-            Toast.makeText(this, "Voice cancel event emitted to VoiceCommandListener.", Toast.LENGTH_SHORT).show()
+        binding.btnResolveSos.setOnClickListener {
+            appendLog("[User] Resolve SOS button pressed.")
+            orchestrator.resolveSos()
         }
 
-        // Simulate ACCIDENT acoustic event handoff
-        binding.btnSimulateAccident.setOnClickListener {
-            appendLog("[DEMO / MOCK] Injecting synthetic ACCIDENT classification...")
-            val simulatedResult = ClassifierResult(
+        binding.btnManualSos.setOnClickListener {
+            appendLog("[User] Manual SOS triggered.")
+            orchestrator.triggerManualSos()
+        }
+
+        // --- Demo Scenario Controls ---
+
+        // Scenario 1: Loud Harmless (Fireworks -> Elevated threat score, but < 70 threshold -> No SOS)
+        binding.btnScenario1Harmless.setOnClickListener {
+            appendLog("[DEMO] Scenario 1: Loud Harmless (Fireworks). Expect: Score rises but < 70, No SOS.")
+            val harmlessResult = ClassifierResult(
+                timestampMs = System.currentTimeMillis(),
+                normalProbability = 0.95f,
+                accidentProbability = 0.03f,
+                distressProbability = 0.01f,
+                violentIncidentProbability = 0.01f,
+                predictedClass = EmergencyClass.NORMAL,
+                modelStatus = ModelStatus.OK
+            )
+            val noMotion = SensorEvidence(System.currentTimeMillis(), accelerationAnomaly = false, 0.1f, false, 0.1f)
+            orchestrator.threatEngine.onClassifierResult(harmlessResult, noMotion)
+        }
+
+        // Scenario 2: Accident (Accident 88% + Impact Motion -> Score >= 70 -> Countdown -> Active SOS)
+        binding.btnScenario2Accident.setOnClickListener {
+            appendLog("[DEMO] Scenario 2: Vehicle Accident + Impact. Expect: Score >= 70 -> Countdown -> Active SOS.")
+            val accidentResult = ClassifierResult(
                 timestampMs = System.currentTimeMillis(),
                 normalProbability = 0.05f,
-                accidentProbability = 0.88f,
-                distressProbability = 0.05f,
+                accidentProbability = 0.90f,
+                distressProbability = 0.03f,
                 violentIncidentProbability = 0.02f,
                 predictedClass = EmergencyClass.ACCIDENT,
-                modelStatus = ModelStatus.DEGRADED // Correctly marked as mock/degraded
+                modelStatus = ModelStatus.OK
             )
-            threatEngine.onClassifierResult(simulatedResult)
+            val impactMotion = SensorEvidence(System.currentTimeMillis(), accelerationAnomaly = true, 0.85f, false, 0.3f)
+            orchestrator.threatEngine.onClassifierResult(accidentResult, impactMotion)
         }
 
-        // Clear console logs
+        // Scenario 3: Scream Alone (Distress + No Motion -> Score < 70 -> No SOS)
+        binding.btnScenario3Scream.setOnClickListener {
+            appendLog("[DEMO] Scenario 3: Scream Alone (No Motion). Expect: Score elevated but < 70 -> No SOS.")
+            val screamResult = ClassifierResult(
+                timestampMs = System.currentTimeMillis(),
+                normalProbability = 0.20f,
+                accidentProbability = 0.05f,
+                distressProbability = 0.70f,
+                violentIncidentProbability = 0.05f,
+                predictedClass = EmergencyClass.DISTRESS,
+                modelStatus = ModelStatus.OK
+            )
+            val noMotion = SensorEvidence(System.currentTimeMillis(), accelerationAnomaly = false, 0.0f, false, 0.0f)
+            orchestrator.threatEngine.onClassifierResult(screamResult, noMotion)
+        }
+
+        // Scenario 4: Distress + Erratic Motion -> Score >= 70 -> Countdown -> Active SOS
+        binding.btnScenario4DistressMotion.setOnClickListener {
+            appendLog("[DEMO] Scenario 4: Distress + Erratic Motion. Expect: Score >= 70 -> Countdown -> Active SOS.")
+            val distressResult = ClassifierResult(
+                timestampMs = System.currentTimeMillis(),
+                normalProbability = 0.02f,
+                accidentProbability = 0.03f,
+                distressProbability = 0.88f,
+                violentIncidentProbability = 0.07f,
+                predictedClass = EmergencyClass.DISTRESS,
+                modelStatus = ModelStatus.OK
+            )
+            val erraticMotion = SensorEvidence(System.currentTimeMillis(), accelerationAnomaly = true, 0.75f, true, 0.80f)
+            orchestrator.threatEngine.onClassifierResult(distressResult, erraticMotion)
+        }
+
+        // Scenario 5: Voice Cancel ("Hey Echo, cancel SOS")
+        binding.btnSimulateVoiceCancel.setOnClickListener {
+            appendLog("[DEMO] Voice Cancel: \"Hey Echo, cancel SOS\" received.")
+            voiceCommandListener.simulateCancelCommand()
+            orchestrator.cancelCountdown("Voice cancel command")
+        }
+
+        // Scenario 6: Network Toggle (Offline Simulation -> Siren Trigger during Active SOS)
+        binding.btnToggleNetwork.setOnClickListener {
+            val nextState = !orchestrator.isRemoteAvailable
+            orchestrator.setNetworkConnectivity(nextState)
+            val netStr = if (nextState) "ONLINE" else "OFFLINE"
+            appendLog("[DEMO] Network connectivity set to: $netStr. Siren status: ${orchestrator.localSirenController.isSirenActive}")
+            Toast.makeText(this, "Network: $netStr", Toast.LENGTH_SHORT).show()
+        }
+
         binding.btnClearLogs.setOnClickListener {
             logBuffer.clear()
             binding.tvLogConsole.text = ""
@@ -191,39 +269,68 @@ class ArmEchoActivity : AppCompatActivity(),
             return
         }
 
-        appendLog("[User] Arm Echo action initiated.")
+        appendLog("[User] Arm Echo initiated.")
         val serviceIntent = Intent(this, ForegroundAudioService::class.java).apply {
             action = ForegroundAudioService.ACTION_START_ARMED
         }
-
-        // Start Foreground Service explicitly
         ContextCompat.startForegroundService(this, serviceIntent)
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
     private fun disarmEcho() {
-        appendLog("[User] Disarm Echo action initiated.")
+        appendLog("[User] Disarm Echo initiated.")
         if (isServiceBound) {
             audioService?.stopMonitoring()
             unbindService(serviceConnection)
             isServiceBound = false
         }
-
         val serviceIntent = Intent(this, ForegroundAudioService::class.java).apply {
             action = ForegroundAudioService.ACTION_STOP_DISARMED
         }
         stopService(serviceIntent)
-
         isArmed = false
+        orchestrator.disarm()
         updateArmUi(false)
+    }
+
+    private fun updateSosStateUi(state: SosState) {
+        when (state) {
+            SosState.MONITORING -> {
+                binding.llCountdownCard.visibility = View.GONE
+                binding.llActiveSosCard.visibility = View.GONE
+                updateArmUi(isArmed)
+            }
+            SosState.COUNTDOWN -> {
+                binding.llCountdownCard.visibility = View.VISIBLE
+                binding.llActiveSosCard.visibility = View.GONE
+                binding.tvStatusValue.text = getString(R.string.status_countdown)
+                binding.tvStatusValue.setTextColor(ContextCompat.getColor(this, R.color.status_emergency))
+            }
+            SosState.ACTIVE_SOS -> {
+                binding.llCountdownCard.visibility = View.GONE
+                binding.llActiveSosCard.visibility = View.VISIBLE
+                binding.tvStatusValue.text = getString(R.string.status_sos)
+                binding.tvStatusValue.setTextColor(ContextCompat.getColor(this, R.color.status_emergency))
+                binding.tvIncidentId.text = "Incident: ${orchestrator.activeIncidentId}"
+                val sirenTxt = if (orchestrator.localSirenController.isSirenActive) "SIREN: ACTIVE (Offline)" else "Siren: Inactive (Online)"
+                binding.tvSirenStatus.text = sirenTxt
+            }
+            SosState.RESOLVED, SosState.CANCELLED -> {
+                binding.llCountdownCard.visibility = View.GONE
+                binding.llActiveSosCard.visibility = View.GONE
+                binding.tvStatusValue.text = if (state == SosState.RESOLVED) getString(R.string.status_resolved) else "CANCELLED"
+            }
+            SosState.DEGRADED -> {
+                binding.tvStatusValue.text = getString(R.string.status_degraded)
+            }
+        }
     }
 
     private fun updateArmUi(armed: Boolean) {
         if (armed) {
             binding.tvStatusValue.text = getString(R.string.status_armed)
             binding.tvStatusValue.setTextColor(ContextCompat.getColor(this, R.color.status_armed))
-            binding.tvStatusDetail.text = "Microphone Foreground Service active. 3s rolling RAM buffer."
-
+            binding.tvStatusDetail.text = "Microphone + Accelerometer + Gyroscope Active"
             binding.btnToggleArm.text = getString(R.string.btn_disarm)
             binding.btnToggleArm.backgroundTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.btn_disarm_bg)
@@ -235,7 +342,6 @@ class ArmEchoActivity : AppCompatActivity(),
             binding.tvStatusValue.text = getString(R.string.status_disarmed)
             binding.tvStatusValue.setTextColor(ContextCompat.getColor(this, R.color.status_disarmed))
             binding.tvStatusDetail.text = "Tap below or say \"Hey Echo\" when active"
-
             binding.btnToggleArm.text = getString(R.string.btn_arm)
             binding.btnToggleArm.backgroundTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.btn_arm_bg)
@@ -243,8 +349,6 @@ class ArmEchoActivity : AppCompatActivity(),
             binding.ivShieldIcon.imageTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(this, R.color.status_disarmed)
             )
-
-            // Reset meters
             binding.pbAudioRms.progress = 0
             binding.tvRmsValue.text = "0.00 (-∞ dBFS)"
             binding.pbThreatScore.progress = 0
@@ -253,14 +357,13 @@ class ArmEchoActivity : AppCompatActivity(),
         }
     }
 
+    private fun updateContactsUi() {
+        val count = orchestrator.contactManager.getContacts().size
+        binding.tvContactsDetail.text = "$count contacts configured (2–5 active)"
+    }
+
     private fun updatePermissionUi(hasMic: Boolean) {
-        if (hasMic) {
-            binding.btnPermissions.visibility = View.GONE
-        } else {
-            binding.btnPermissions.visibility = View.VISIBLE
-            binding.tvStatusValue.text = getString(R.string.status_degraded)
-            binding.tvStatusValue.setTextColor(ContextCompat.getColor(this, R.color.status_degraded))
-        }
+        binding.btnPermissions.visibility = if (hasMic) View.GONE else View.VISIBLE
     }
 
     // --- ForegroundAudioService Callbacks ---
@@ -282,6 +385,7 @@ class ArmEchoActivity : AppCompatActivity(),
     }
 
     override fun onClassifierResultReceived(result: ClassifierResult) {
+        orchestrator.onAcousticInference(result)
         runOnUiThread {
             val prob = when (result.predictedClass) {
                 EmergencyClass.NORMAL -> result.normalProbability
@@ -289,13 +393,11 @@ class ArmEchoActivity : AppCompatActivity(),
                 EmergencyClass.DISTRESS -> result.distressProbability
                 EmergencyClass.VIOLENT_INCIDENT -> result.violentIncidentProbability
             }
-            val percent = (prob * 100).toInt()
-            binding.tvClassValue.text = "${result.predictedClass} ($percent%)"
-
+            binding.tvClassValue.text = "${result.predictedClass} (${(prob * 100).toInt()}%)"
             val color = when (result.predictedClass) {
                 EmergencyClass.NORMAL -> ContextCompat.getColor(this, R.color.status_armed)
                 EmergencyClass.ACCIDENT -> ContextCompat.getColor(this, R.color.status_warning)
-                EmergencyClass.DISTRESS, EmergencyClass.VIOLENT_INCIDENT -> ContextCompat.getColor(this, R.color.status_emergency)
+                else -> ContextCompat.getColor(this, R.color.status_emergency)
             }
             binding.tvClassValue.setTextColor(color)
         }
@@ -305,57 +407,56 @@ class ArmEchoActivity : AppCompatActivity(),
         runOnUiThread {
             this.isArmed = isArmed
             updateArmUi(isArmed)
-            binding.tvAiStatusValue.text = "$status"
+            binding.tvAiStatusValue.text = "$status (Sensors Active)"
         }
     }
 
-    // --- ThreatEngineInterface Callbacks ---
+    // --- ThreatEngine Callbacks ---
 
     override fun onThreatUpdate(update: ThreatUpdate) {
         runOnUiThread {
             binding.pbThreatScore.progress = update.threatScore
             binding.tvThreatScoreValue.text = "${update.threatScore} / 100"
-
-            val scoreColor = when {
-                update.threatScore >= MockThreatEngine.SOS_THRESHOLD -> ContextCompat.getColor(this, R.color.status_emergency)
+            val color = when {
+                update.threatScore >= orchestrator.threatEngine.config.sosThreshold -> ContextCompat.getColor(this, R.color.status_emergency)
                 update.threatScore > 35 -> ContextCompat.getColor(this, R.color.status_warning)
                 else -> ContextCompat.getColor(this, R.color.text_primary)
             }
-            binding.tvThreatScoreValue.setTextColor(scoreColor)
-
-            appendLog("[ThreatEngine] Score=${update.threatScore}/100 Class=${update.acousticEvidence.predictedClass} Status='${update.evidenceStatus}'")
+            binding.tvThreatScoreValue.setTextColor(color)
+            appendLog("[ThreatEngine] Score=${update.threatScore}/100 Status='${update.evidenceStatus}'")
         }
+    }
+
+    // --- Countdown Callbacks ---
+
+    override fun onTick(secondsRemaining: Int) {
+        runOnUiThread {
+            binding.tvCountdownSeconds.text = "$secondsRemaining"
+        }
+    }
+
+    override fun onCountdownFinished() {
+        // Handled in orchestrator
+    }
+
+    override fun onCountdownCancelled() {
+        // Handled in orchestrator
     }
 
     private fun appendLog(message: String) {
         val timestamp = timeFormat.format(Date())
         val line = "[$timestamp] $message\n"
         logBuffer.append(line)
-
-        // Limit buffer length
         if (logBuffer.length > 5000) {
             val startIdx = logBuffer.indexOf("\n", 1000)
-            if (startIdx != -1) {
-                logBuffer.delete(0, startIdx + 1)
-            }
+            if (startIdx != -1) logBuffer.delete(0, startIdx + 1)
         }
-
         binding.tvLogConsole.text = logBuffer.toString()
-
-        // Auto-scroll to bottom
-        binding.tvLogConsole.post {
-            val scrollAmount = binding.tvLogConsole.layout?.let {
-                it.getLineTop(binding.tvLogConsole.lineCount) - binding.tvLogConsole.height
-            } ?: 0
-            if (scrollAmount > 0) {
-                binding.tvLogConsole.scrollTo(0, scrollAmount)
-            }
-        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        threatEngine.removeThreatListener(this)
+        orchestrator.disarm()
         if (isServiceBound) {
             unbindService(serviceConnection)
             isServiceBound = false

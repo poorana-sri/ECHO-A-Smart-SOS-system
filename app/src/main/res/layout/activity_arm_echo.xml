@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
         <!-- Top Header -->
         <LinearLayout
@@ -56,34 +56,120 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Privacy & Prototype Notice Banner -->
+        <!-- 10-Second Countdown Warning Card (Shown during COUNTDOWN) -->
         <LinearLayout
-            android:id="@+id/llPrivacyBanner"
+            android:id="@+id/llCountdownCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
+            android:gravity="center"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
             <TextView
-                android:id="@+id/tvPrototypeNotice"
+                android:id="@+id/tvCountdownTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/prototype_notice"
-                android:textColor="@color/status_warning"
-                android:textSize="11sp"
+                android:text="🚨 SOS WARNING: EMERGENCY DETECTED"
+                android:textColor="@color/status_emergency"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvPrivacyNotice"
+                android:id="@+id/tvCountdownSeconds"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="10"
+                android:textColor="@color/status_emergency"
+                android:textSize="48sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvCountdownSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Say &quot;Hey Echo, cancel SOS&quot; or tap below"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelSos"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="@color/btn_disarm_bg"
+                android:text="@string/btn_cancel_sos"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="10dp" />
+        </LinearLayout>
+
+        <!-- Active SOS Status Card (Shown during ACTIVE_SOS) -->
+        <LinearLayout
+            android:id="@+id/llActiveSosCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvActiveSosBanner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔴 SOS ACTIVE: EMERGENCY DISPATCHED"
+                android:textColor="@color/status_emergency"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvIncidentId"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:lineSpacingMultiplier="1.2"
-                android:text="@string/privacy_statement"
+                android:text="Incident: echo-inc-none"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvLocationStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Location: LIVE (0.0000, 0.0000)"
                 android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvSirenStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Siren: INACTIVE (Online Mode)"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResolveSos"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="@color/status_armed"
+                android:text="@string/btn_resolve_sos"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:cornerRadius="10dp" />
         </LinearLayout>
 
         <!-- Arming State & Action Card -->
@@ -91,11 +177,11 @@
             android:id="@+id/llArmCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/tvStatusLabel"
@@ -122,20 +208,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Tap below or say \"Hey Echo\" when active"
+                android:text="Tap below or say &quot;Hey Echo&quot; when active"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnToggleArm"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="16dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
                 android:backgroundTint="@color/btn_arm_bg"
                 android:text="@string/btn_arm"
                 android:textAllCaps="false"
                 android:textColor="@color/btn_arm_text"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 app:cornerRadius="10dp"
                 app:icon="@drawable/ic_mic"
@@ -143,18 +229,60 @@
                 app:iconTint="@color/white" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPermissions"
+                android:id="@+id/btnManualSos"
                 android:layout_width="match_parent"
                 android:layout_height="44dp"
                 android:layout_marginTop="8dp"
+                android:backgroundTint="@color/status_emergency"
+                android:text="@string/btn_manual_sos"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPermissions"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
                 android:backgroundTint="@color/bg_card_highlight"
                 android:text="@string/btn_grant_permissions"
                 android:textAllCaps="false"
                 android:textColor="@color/text_primary"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:visibility="gone"
                 app:cornerRadius="8dp"
                 tools:visibility="visible" />
+        </LinearLayout>
+
+        <!-- Emergency Contacts Card -->
+        <LinearLayout
+            android:id="@+id/llContactsCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:id="@+id/tvContactsTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emergency Contacts (2–5 Required)"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvContactsDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="2 contacts configured (Mom, Primary Contact)"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
         </LinearLayout>
 
         <!-- Live Telemetry Card -->
@@ -162,10 +290,10 @@
             android:id="@+id/llTelemetryCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="14dp">
 
             <TextView
                 android:id="@+id/tvTelemetryTitle"
@@ -173,14 +301,14 @@
                 android:layout_height="wrap_content"
                 android:text="@string/title_acoustic_telemetry"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <!-- RMS Level Indicator -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -191,7 +319,7 @@
                     android:layout_weight="1"
                     android:text="@string/label_rms_level"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/tvRmsValue"
@@ -199,7 +327,7 @@
                     android:layout_height="wrap_content"
                     android:text="0.00 (0 dBFS)"
                     android:textColor="@color/text_primary"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -207,8 +335,8 @@
                 android:id="@+id/pbAudioRms"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="4dp"
+                android:layout_height="6dp"
+                android:layout_marginTop="3dp"
                 android:max="100"
                 android:progress="0"
                 android:progressDrawable="@android:drawable/progress_horizontal"
@@ -218,7 +346,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -229,23 +357,23 @@
                     android:layout_weight="1"
                     android:text="@string/label_current_class"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/tvClassValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="NORMAL (98%)"
+                    android:text="NORMAL (Standby)"
                     android:textColor="@color/status_armed"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Mock Threat Score -->
+            <!-- Threat Score (Acoustic + Motion Fused) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -256,7 +384,7 @@
                     android:layout_weight="1"
                     android:text="@string/label_threat_score"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/tvThreatScoreValue"
@@ -264,7 +392,7 @@
                     android:layout_height="wrap_content"
                     android:text="0 / 100"
                     android:textColor="@color/text_primary"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -272,18 +400,18 @@
                 android:id="@+id/pbThreatScore"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="10dp"
-                android:layout_marginTop="4dp"
+                android:layout_height="8dp"
+                android:layout_marginTop="3dp"
                 android:max="100"
                 android:progress="0"
                 android:progressDrawable="@android:drawable/progress_horizontal"
                 android:progressTint="@color/threat_bar_fill" />
 
-            <!-- Model Status Badge -->
+            <!-- Model & Sensor Status Badge -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -294,92 +422,119 @@
                     android:layout_weight="1"
                     android:text="@string/label_ai_status"
                     android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
 
                 <TextView
                     android:id="@+id/tvAiStatusValue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_highlight"
-                    android:paddingHorizontal="8dp"
+                    android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
-                    android:text="OK (TFLite Runtime)"
+                    android:text="OK (Sensors + TFLite Active)"
                     android:textColor="@color/text_primary"
-                    android:textSize="11sp" />
+                    android:textSize="10sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Hackathon Demo Triggers Card -->
+        <!-- Hackathon Demo Scenarios Card (7 Scenarios) -->
         <LinearLayout
             android:id="@+id/llDemoCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="14dp">
 
             <TextView
                 android:id="@+id/tvDemoTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Prototype Test &amp; Demo Controls"
+                android:text="Developer 3 SOS Demo Scenarios"
                 android:textColor="@color/text_primary"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvDemoSubtitle"
-                android:layout_width="wrap_content"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScenario1Harmless"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Simulate inputs to demonstrate the AI runtime and threat engine handoffs"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
+                android:layout_marginTop="6dp"
+                android:backgroundTint="@color/bg_card_highlight"
+                android:text="@string/btn_test_harmless"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="11sp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScenario2Accident"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:backgroundTint="@color/bg_card_highlight"
+                android:text="@string/btn_test_accident"
+                android:textAllCaps="false"
+                android:textColor="@color/status_warning"
+                android:textSize="11sp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScenario3Scream"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:backgroundTint="@color/bg_card_highlight"
+                android:text="@string/btn_test_scream"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="11sp"
+                app:cornerRadius="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScenario4DistressMotion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:backgroundTint="@color/bg_card_highlight"
+                android:text="@string/btn_test_distress_motion"
+                android:textAllCaps="false"
+                android:textColor="@color/status_emergency"
+                android:textSize="11sp"
+                app:cornerRadius="6dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="4dp"
                 android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSimulateWakeWord"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:backgroundTint="@color/bg_card_highlight"
-                    android:text="@string/btn_test_wake_phrase"
-                    android:textAllCaps="false"
-                    android:textColor="@color/text_primary"
-                    android:textSize="11sp"
-                    app:cornerRadius="8dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSimulateVoiceCancel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/bg_card_highlight"
                     android:text="@string/btn_test_cancel_phrase"
                     android:textAllCaps="false"
                     android:textColor="@color/text_primary"
-                    android:textSize="11sp"
-                    app:cornerRadius="8dp" />
-            </LinearLayout>
+                    android:textSize="10sp"
+                    app:cornerRadius="6dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSimulateAccident"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:backgroundTint="@color/bg_card_highlight"
-                android:text="@string/btn_test_accident"
-                android:textAllCaps="false"
-                android:textColor="@color/status_warning"
-                android:textSize="12sp"
-                app:cornerRadius="8dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnToggleNetwork"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/bg_card_highlight"
+                    android:text="@string/btn_toggle_network"
+                    android:textAllCaps="false"
+                    android:textColor="@color/text_primary"
+                    android:textSize="10sp"
+                    app:cornerRadius="6dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Live Log Stream -->
@@ -387,10 +542,10 @@
             android:id="@+id/llLogCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="14dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -405,7 +560,7 @@
                     android:layout_weight="1"
                     android:text="@string/title_event_log"
                     android:textColor="@color/text_primary"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -416,19 +571,19 @@
                     android:padding="4dp"
                     android:text="Clear"
                     android:textColor="@color/text_muted"
-                    android:textSize="12sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/tvLogConsole"
                 android:layout_width="match_parent"
-                android:layout_height="140dp"
-                android:layout_marginTop="8dp"
+                android:layout_height="120dp"
+                android:layout_marginTop="6dp"
                 android:background="@color/bg_primary"
                 android:fontFamily="monospace"
-                android:padding="8dp"
+                android:padding="6dp"
                 android:scrollbars="vertical"
-                android:text="[System] ECHO Foundation initialized. Standalone mode ready.\n[Privacy] Volatile RAM buffer allocated (3.0s @ 16kHz mono, 0 bytes on disk)."
+                android:text="[System] ECHO SOS Orchestrator ready."
                 android:textColor="@color/text_secondary"
                 android:textSize="10sp" />
         </LinearLayout>
